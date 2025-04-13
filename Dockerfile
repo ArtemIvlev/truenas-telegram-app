@@ -9,10 +9,11 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Копируем код приложения
-COPY app/ .
+COPY . .
+RUN pip install -e .
 
 # Создаем директорию для данных
 RUN mkdir -p /data
 
 # Запускаем приложение
-CMD ["python", "main.py"] 
+CMD ["python", "-m", "app.main"] 

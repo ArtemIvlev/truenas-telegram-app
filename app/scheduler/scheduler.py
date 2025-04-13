@@ -71,9 +71,12 @@ class Scheduler:
         job = schedule.get_jobs(job_id)[0]
         return job.next_run
         
-    def run_pending(self):
-        """Запустить все ожидающие задачи"""
-        schedule.run_pending()
+    def run(self):
+        """Run the scheduler"""
+        logger.info("Запуск шедулера...")
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
         
     def run_forever(self, interval: int = 1):
         """

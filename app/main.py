@@ -1,7 +1,9 @@
 import os
 import logging
-from scheduler.scheduler import Scheduler
-from handlers.base_handler import BaseHandler
+from dotenv import load_dotenv
+from app.scheduler.scheduler import Scheduler
+from app.handlers.file_check_handler import FileCheckHandler
+from app.handlers.detect_nude_handler import DetectNudeHandler
 
 # Настройка логирования
 logging.basicConfig(
@@ -10,51 +12,33 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-class FileCheckHandler(BaseHandler):
-    def __init__(self):
-        self.api_url = os.getenv('TRUENAS_API_URL')
-        self.api_key = os.getenv('TRUENAS_API_KEY')
-        self.config = {
-            'storage_path': '/data',
-            'limit': 10
-        }
-        
-    def handle(self):
-        storage_path = self.config.get('storage_path', '/data')
-        limit = self.config.get('limit', 10)
-        
-        try:
-            files = []
-            for item in os.listdir(storage_path):
-                if os.path.isfile(os.path.join(storage_path, item)):
-                    files.append(item)
-                if len(files) >= limit:
-                    break
-                    
-            return {
-                'status': 'success',
-                'files': files
-            }
-        except Exception as e:
-            logger.error(f"Ошибка при чтении директории: {e}")
-            return {
-                'status': 'error',
-                'error': str(e)
-            }
+# Загрузка переменных окружения
+load_dotenv()
 
 def main():
-    # Создаем экземпляр шедулера
-    scheduler = Scheduler()
-    
-    # Добавляем задачу проверки файлов
-    scheduler.add_job(
-        job_id='check_files',
-        handler=FileCheckHandler().handle,
-        schedule_time='every 5 minutes'
-    )
-    
-    # Запускаем шедулер
-    scheduler.run_forever(interval=1)
+    try:
+        scheduler = Scheduler()
+        
+        # Добавляем задачу проверки файлов
+        scheduler.add_job(
+            job_id='check_files',
+            handler=FileCheckHandler().handle,
+            schedule_time='every 5 minutes'
+        )
+        
+        # Добавляем задачу detect_nude.py
+        scheduler.add_job(
+            job_id='detect_nude',
+            handler=DetectNudeHandler().handle,
+            schedule_time='every 1 days'
+        )
+        
+        # Запускаем планировщик
+        scheduler.run()
+        
+    except Exception as e:
+        logger.error(f"Ошибка в главном процессе: {str(e)}")
+        raise
 
 if __name__ == "__main__":
     main() 
