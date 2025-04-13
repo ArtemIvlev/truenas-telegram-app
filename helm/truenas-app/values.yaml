@@ -1,0 +1,71 @@
+replicaCount: 1
+
+image:
+  repository: telegram-publisher
+  tag: latest
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 8000
+
+# Отключаем ingress, так как не планируется web UI
+ingress:
+  enabled: false
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Конфигурация Telegram
+telegram:
+  botToken: ""  # Токен вашего Telegram бота
+  chatId: ""    # ID чата для отправки сообщений
+
+# Конфигурация TrueNAS
+truenas:
+  apiUrl: "http://192.168.2.228/api/v2.0"  # URL API TrueNAS
+  apiKey: ""  # API ключ TrueNAS
+  dataset: "telegram-publisher"  # Имя датасета в TrueNAS
+  mountPath: "/data"  # Путь монтирования в контейнере
+  checkInterval: 300  # интервал проверки в секундах
+
+env:
+  - name: TELEGRAM_BOT_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: telegram-publisher-secrets
+        key: bot-token
+  - name: TELEGRAM_CHAT_ID
+    valueFrom:
+      secretKeyRef:
+        name: telegram-publisher-secrets
+        key: chat-id
+  - name: TRUENAS_API_URL
+    value: {{ .Values.truenas.apiUrl | quote }}
+  - name: TRUENAS_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: telegram-publisher-secrets
+        key: truenas-api-key
+  - name: DEBUG
+    value: "false"
+  - name: LOG_LEVEL
+    value: "INFO"
+  - name: CHECK_INTERVAL
+    value: {{ .Values.truenas.checkInterval | quote }}
+  - name: DB_PATH
+    value: "/data/telegram_publisher.db"  # путь к файлу SQLite БД
+
+persistence:
+  enabled: true
+  storageClass: "truenas-managed"
+  size: 100Mi
+  mountPath: {{ .Values.truenas.mountPath }} 

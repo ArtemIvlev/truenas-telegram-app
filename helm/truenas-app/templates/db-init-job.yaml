@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "truenas-app.fullname" . }}-db-init
+  labels:
+    {{- include "truenas-app.labels" . | nindent 4 }}
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "truenas-app.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: db-init
+        image: postgres:13
+        env:
+          - name: PGHOST
+            value: {{ .Values.database.host | quote }}
+          - name: PGPORT
+            value: {{ .Values.database.port | quote }}
+          - name: PGDATABASE
+            value: {{ .Values.database.name | quote }}
+          - name: PGUSER
+            value: {{ .Values.database.user | quote }}
+          - name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: telegram-publisher-secrets
+                key: db-password
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            psql -c "CREATE TABLE IF NOT EXISTS messages (
+              id SERIAL PRIMARY KEY,
+              content TEXT NOT NULL,
+              created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+              status VARCHAR(20) NOT NULL
+            );"
+      restartPolicy: OnFailure 
