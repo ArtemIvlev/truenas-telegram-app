@@ -14,6 +14,10 @@ class FileCheckHandler(BaseHandler):
     def __init__(self):
         self.api_url = os.getenv('TRUENAS_API_URL')
         self.api_key = os.getenv('TRUENAS_API_KEY')
+        self.config = {
+            'storage_path': '/data',
+            'limit': 10
+        }
         
     def handle(self):
         storage_path = self.config.get('storage_path', '/data')

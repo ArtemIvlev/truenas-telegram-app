@@ -11,31 +11,40 @@ class Scheduler:
         self.jobs: Dict[str, Dict] = {}
         self.handlers: Dict[str, Callable] = {}
         
-    def add_job(self, job_id: str, handler: Callable, schedule_time: str, **kwargs):
-        """
-        Добавить задачу в расписание
+    def add_job(self, job_id: str, handler: Callable, schedule_time: str):
+        """Add a new job to the scheduler
         
         Args:
-            job_id: Уникальный идентификатор задачи
-            handler: Функция-обработчик
-            schedule_time: Время выполнения в формате cron или human-readable
-            **kwargs: Дополнительные параметры для задачи
+            job_id (str): Unique identifier for the job
+            handler (Callable): Function to execute
+            schedule_time (str): Schedule time in format 'every X minutes/hours/days'
         """
+        if schedule_time.startswith('every'):
+            time_parts = schedule_time.split()
+            if len(time_parts) != 3:
+                raise ValueError("Invalid schedule time format. Use 'every X minutes/hours/days'")
+                
+            interval = int(time_parts[1])
+            unit = time_parts[2]
+            
+            if unit == 'minutes':
+                schedule.every(interval).minutes.do(handler).tag(job_id)
+            elif unit == 'hours':
+                schedule.every(interval).hours.do(handler).tag(job_id)
+            elif unit == 'days':
+                schedule.every(interval).days.do(handler).tag(job_id)
+            else:
+                raise ValueError("Invalid time unit. Use minutes, hours, or days")
+        else:
+            raise ValueError("Schedule time must start with 'every'")
+            
         self.handlers[job_id] = handler
         self.jobs[job_id] = {
-            'schedule': schedule_time,
-            'kwargs': kwargs,
+            'handler': handler,
+            'schedule_time': schedule_time,
             'last_run': None
         }
         
-        # Добавляем задачу в schedule
-        if schedule_time.startswith('every'):
-            # Для human-readable формата (every 5 minutes, every day at 10:30 и т.д.)
-            getattr(schedule.every(), schedule_time.split()[1])(handler).tag(job_id)
-        else:
-            # Для cron-подобного формата
-            schedule.every().day.at(schedule_time).do(handler).tag(job_id)
-            
         logger.info(f"Добавлена задача {job_id} с расписанием {schedule_time}")
         
     def remove_job(self, job_id: str):
@@ -51,7 +60,7 @@ class Scheduler:
         if job_id in self.jobs:
             return {
                 'id': job_id,
-                'schedule': self.jobs[job_id]['schedule'],
+                'schedule': self.jobs[job_id]['schedule_time'],
                 'last_run': self.jobs[job_id]['last_run'],
                 'next_run': self._get_next_run(job_id)
             }
