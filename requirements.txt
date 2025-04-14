@@ -1,4 +1,6 @@
-python-dotenv
+fastapi==0.109.2
+uvicorn==0.27.1
+pydantic==2.6.1
 schedule
 opencv-python
 numpy==1.24.2
@@ -16,3 +18,4 @@ face-detection
 ultralytics
 opennsfw2
 timm 
+python-dotenv
