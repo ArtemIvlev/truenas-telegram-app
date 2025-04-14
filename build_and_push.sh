@@ -15,30 +15,21 @@ echo "Обновление подмодуля..."
 git submodule update --init --recursive
 git submodule update --remote
 
-# Включаем BuildKit для ускорения сборки
-export DOCKER_BUILDKIT=1
+# Отключаем BuildKit
+export DOCKER_BUILDKIT=0
 
 echo "Сборка Docker образа..."
+# Полная пересборка образа без кеша
 docker build \
-    --build-arg BUILDKIT_INLINE_CACHE=1 \
-    --cache-from ${DOCKERHUB_USERNAME}/${REPOSITORY_NAME}:latest \
-    --target builder \
-    --tag ${DOCKERHUB_USERNAME}/${REPOSITORY_NAME}:builder \
-    --progress=plain \
-    .
-
-docker build \
-    --build-arg BUILDKIT_INLINE_CACHE=1 \
-    --cache-from ${DOCKERHUB_USERNAME}/${REPOSITORY_NAME}:builder \
+    --no-cache \
     --tag ${DOCKERHUB_USERNAME}/${REPOSITORY_NAME}:${TIMESTAMP} \
     --tag ${DOCKERHUB_USERNAME}/${REPOSITORY_NAME}:latest \
-    --progress=plain \
+    --build-arg VERSION=${TIMESTAMP} \
     .
 
 echo "Публикация в Docker Hub..."
 docker push ${DOCKERHUB_USERNAME}/${REPOSITORY_NAME}:${TIMESTAMP}
 docker push ${DOCKERHUB_USERNAME}/${REPOSITORY_NAME}:latest
-docker push ${DOCKERHUB_USERNAME}/${REPOSITORY_NAME}:builder
 
 echo "Готово! Образ опубликован как:"
 echo "${DOCKERHUB_USERNAME}/${REPOSITORY_NAME}:${TIMESTAMP}"

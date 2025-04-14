@@ -5,6 +5,7 @@ import subprocess
 import logging
 import asyncio
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
 
 # Настройка логирования
 logging.basicConfig(
@@ -18,15 +19,23 @@ load_dotenv()
 
 app = FastAPI(title="Nude Detection Service")
 
+# Добавляем CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Путь к скрипту detect_nude.py
-NUDE_CATALOG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'nude_catalog')
-SCRIPT_PATH = os.path.join(NUDE_CATALOG_PATH, 'detect_nude', 'detect_nude.py')
+SCRIPT_PATH = '/app/nude_catalog/detect_nude/detect_nude.py'
 
 async def run_script():
     """Асинхронный запуск скрипта"""
     process = await asyncio.create_subprocess_exec(
         'python3', SCRIPT_PATH,
-        cwd=NUDE_CATALOG_PATH,
+        cwd='/app/nude_catalog',
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE
     )
@@ -61,7 +70,7 @@ async def run_detection():
             )
         
         # Запускаем скрипт асинхронно
-        process = await run_script()
+        asyncio.create_task(run_script())
         
         # Сразу возвращаем ответ, что скрипт запущен
         return JSONResponse(content={
@@ -78,4 +87,13 @@ async def run_detection():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"} 
+    return {"status": "healthy"}
+
+@app.on_event("startup")
+async def startup_event():
+    version = os.getenv("APP_VERSION", "development")
+    logger.info(f"Starting application version: {version}")
+
+@app.get("/")
+async def root():
+    return {"message": "Nude Detection Service API"} 
