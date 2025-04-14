@@ -30,6 +30,22 @@ async def run_script():
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE
     )
+    
+    # Читаем вывод в фоновом режиме
+    async def log_output(stream, prefix):
+        while True:
+            line = await stream.readline()
+            if not line:
+                break
+            logger.info(f"{prefix}: {line.decode().strip()}")
+    
+    # Запускаем чтение вывода и сохраняем задачи
+    stdout_task = asyncio.create_task(log_output(process.stdout, "STDOUT"))
+    stderr_task = asyncio.create_task(log_output(process.stderr, "STDERR"))
+    
+    # Дожидаемся завершения обеих задач
+    await asyncio.gather(stdout_task, stderr_task)
+    
     return process
 
 @app.post("/run")
