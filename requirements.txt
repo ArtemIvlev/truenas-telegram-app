@@ -1,2 +1,18 @@
-python-dotenv==1.0.0
-schedule==1.2.1 
+python-dotenv
+schedule
+opencv-python
+numpy==1.24.2
+Pillow
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.1.0+cpu
+torchvision==0.16.0+cpu
+tensorflow-cpu
+tqdm
+imagehash
+transformers
+onnxruntime
+scikit-image
+face-detection
+ultralytics
+opennsfw2
+timm 

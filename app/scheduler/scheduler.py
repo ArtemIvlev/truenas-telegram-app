@@ -11,13 +11,14 @@ class Scheduler:
         self.jobs: Dict[str, Dict] = {}
         self.handlers: Dict[str, Callable] = {}
         
-    def add_job(self, job_id: str, handler: Callable, schedule_time: str):
+    def add_job(self, job_id: str, handler: Callable, schedule_time: str, run_now: bool = False):
         """Add a new job to the scheduler
         
         Args:
             job_id (str): Unique identifier for the job
             handler (Callable): Function to execute
             schedule_time (str): Schedule time in format 'every X minutes/hours/days'
+            run_now (bool): Whether to run the job immediately
         """
         if schedule_time.startswith('every'):
             time_parts = schedule_time.split()
@@ -47,6 +48,11 @@ class Scheduler:
         
         logger.info(f"Добавлена задача {job_id} с расписанием {schedule_time}")
         
+        # Запускаем задачу немедленно, если указано
+        if run_now:
+            logger.info(f"Немедленный запуск задачи {job_id}")
+            handler()
+            
     def remove_job(self, job_id: str):
         """Удалить задачу из расписания"""
         if job_id in self.jobs:

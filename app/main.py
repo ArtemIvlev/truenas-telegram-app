@@ -26,11 +26,12 @@ def main():
             schedule_time='every 5 minutes'
         )
         
-        # Добавляем задачу detect_nude.py
+        # Добавляем задачу detect_nude.py с немедленным запуском
         scheduler.add_job(
             job_id='detect_nude',
             handler=DetectNudeHandler().handle,
-            schedule_time='every 1 days'
+            schedule_time='every 1 days',
+            run_now=True  # Запускаем сразу при старте
         )
         
         # Запускаем планировщик
