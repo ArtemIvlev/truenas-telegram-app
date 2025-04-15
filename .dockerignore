@@ -34,4 +34,32 @@ ENV/
 *.log
 
 # Local files
-telegram-publisher.tar 
+telegram-publisher.tar
+
+# Git
+.git
+.gitignore
+
+# Environment
+.env
+
+# Pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Tox
+.tox
+
+# Coverage
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+
+# Pytest
+.pytest_cache
+
+# DS_Store
+.DS_Store 

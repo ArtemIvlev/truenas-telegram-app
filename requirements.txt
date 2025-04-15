@@ -16,4 +16,4 @@ face-detection
 ultralytics
 opennsfw2
 timm
-requests 
+requests
