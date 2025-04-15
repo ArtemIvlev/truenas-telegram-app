@@ -15,4 +15,5 @@ scikit-image
 face-detection
 ultralytics
 opennsfw2
-timm 
+timm
+requests 

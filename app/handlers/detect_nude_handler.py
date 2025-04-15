@@ -1,32 +1,24 @@
 import os
-import subprocess
+import requests
 from app.handlers.base_handler import BaseHandler
 from app.scheduler.scheduler import logger
 
 class DetectNudeHandler(BaseHandler):
     def __init__(self):
-        self.nude_catalog_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'nude_catalog')
+        self.api_url = "http://192.168.2.228:8888/run"
         
     def handle(self):
         try:
-            logger.info("Запуск detect_nude.py")
-            script_path = os.path.join(self.nude_catalog_path, 'detect_nude', 'detect_nude.py')
+            logger.info("Отправка запроса на detect_nude сервис")
             
-            if not os.path.exists(script_path):
-                logger.error(f"Скрипт не найден по пути: {script_path}")
-                return
-                
-            result = subprocess.run(['python3', script_path], 
-                                 cwd=self.nude_catalog_path,
-                                 capture_output=True,
-                                 text=True)
+            response = requests.post(self.api_url)
             
-            if result.returncode == 0:
-                logger.info("detect_nude.py успешно выполнен")
-                if result.stdout:
-                    logger.info(f"Вывод скрипта: {result.stdout}")
+            if response.status_code == 200:
+                logger.info("detect_nude сервис успешно выполнен")
+                if response.text:
+                    logger.info(f"Ответ сервиса: {response.text}")
             else:
-                logger.error(f"Ошибка при выполнении detect_nude.py: {result.stderr}")
+                logger.error(f"Ошибка при выполнении detect_nude сервиса: {response.text}")
                 
         except Exception as e:
-            logger.error(f"Ошибка при запуске detect_nude.py: {str(e)}") 
+            logger.error(f"Ошибка при отправке запроса к detect_nude сервису: {str(e)}") 
