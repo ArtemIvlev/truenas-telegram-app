@@ -1,9 +1,14 @@
 python-dotenv>=0.19.0
 schedule
-requests
+requests>=2.28.0
 croniter
-uvicorn
-fastapi
+uvicorn>=0.18.0
+fastapi>=0.85.0
 telethon>=1.28.5
 psycopg2-binary>=2.9.5
 pillow>=10.0.0
+# Testing dependencies
+pytest>=7.0.0
+pytest-asyncio>=0.20.0
+pytest-mock>=3.8.0
+httpx>=0.24.0  # For FastAPI testing

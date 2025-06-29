@@ -33,8 +33,8 @@ class BaseHandler(ABC):
         
     def after_run(self, result: Dict[str, Any]):
         """Действия после выполнения задачи"""
-        logger.info(f"Задача {this.__class__.__name__} выполнена с результатом: {result}")
+        logger.info(f"Задача {self.__class__.__name__} выполнена с результатом: {result}")
         
     def on_error(self, error: Exception):
         """Обработка ошибок"""
-        logger.error(f"Ошибка в задаче {this.__class__.__name__}: {error}") 
+        logger.error(f"Ошибка в задаче {self.__class__.__name__}: {error}") 

@@ -1,15 +1,16 @@
-import os
 import random
 import asyncio
 from datetime import datetime, timedelta
 from app.handlers.base_handler import BaseHandler
+from app.config.settings import settings
 from app.scheduler.scheduler import logger
-from telegram_post.post import post_random_photo
+# from telegram_post.post import post_random_photo  # Временно закомментировано
 
 class RandomTimeHandler(BaseHandler):
     def __init__(self):
-        self.base_time = os.getenv('RANDOM_TIME_BASE', '08:00')  # Базовое время (8:00)
-        self.duration_minutes = int(os.getenv('RANDOM_TIME_DURATION', '59'))  # Длительность в минутах
+        super().__init__()
+        self.base_time = settings.RANDOM_TIME_BASE
+        self.duration_minutes = settings.RANDOM_TIME_DURATION
         self.task = None  # Для хранения асинхронной задачи
         
     async def execute_task(self, delay_seconds: int):
@@ -19,7 +20,8 @@ class RandomTimeHandler(BaseHandler):
             logger.info("Начало публикации фото в Telegram в случайное время")
             
             # Публикуем случайное фото
-            result = await post_random_photo()
+            # TODO: Реализовать post_random_photo функцию
+            result = await self._post_random_photo_stub()
             
             if result:
                 logger.info(f"Фото успешно опубликовано: {result}")
@@ -28,6 +30,12 @@ class RandomTimeHandler(BaseHandler):
                 
         except Exception as e:
             logger.error(f"Ошибка при публикации фото: {str(e)}")
+    
+    async def _post_random_photo_stub(self):
+        """Временная заглушка для функции публикации фото"""
+        logger.info("Заглушка: публикация случайного фото")
+        # TODO: Реализовать интеграцию с telegram-post модулем
+        return {'status': 'success', 'message': 'Photo posted (stub)'}
         
     def handle(self):
         try:
