@@ -20,13 +20,14 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Копирование исходного кода
-COPY nude_catalog /app/nude_catalog
-COPY app/main.py /app/
+COPY app /app/app
 COPY setup.py /app/
+COPY telegram-post /app/telegram-post
 
-# Установка пакета nude_catalog в режиме разработки
+# Установка пакета в режиме разработки
 WORKDIR /app
 RUN pip install -e .
+RUN pip install -e ./telegram-post
 
 # Этап финального образа
 FROM python:3.9-slim
@@ -51,9 +52,9 @@ RUN useradd -m -u 1000 appuser && \
 
 # Установка переменных окружения
 ENV PHOTO_DIR="/mnt/smb/OneDrive/Pictures/!Фотосессии/" \
-    DB_FILE="/app/nude_catalog/DB/photos.db" \
+    DB_FILE="/app/data/photos.db" \
     REVIEW_DIR="review" \
-    TELEGRAM_DB="/app/nude_catalog/telegram_bot/telegram_bot.db" \
+    TELEGRAM_DB="/app/data/telegram_bot.db" \
     TABLE_NAME="photos_ok" \
     NSFW_THRESHOLD=0.8 \
     CLIP_THRESHOLD=0.8 \
@@ -74,4 +75,4 @@ ENV APP_VERSION=${VERSION}
 EXPOSE 8000
 
 # Запуск приложения
-CMD echo "Starting application version: ${APP_VERSION}" && uvicorn main:app --host 0.0.0.0 --port 8000 
+CMD echo "Starting application version: ${APP_VERSION}" && uvicorn app.main:app --host 0.0.0.0 --port 8000 

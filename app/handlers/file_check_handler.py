@@ -6,6 +6,7 @@ class FileCheckHandler(BaseHandler):
     def __init__(self):
         self.api_url = os.getenv('TRUENAS_API_URL')
         self.api_key = os.getenv('TRUENAS_API_KEY')
+        self.schedule_time = os.getenv('FILE_CHECK_SCHEDULE', 'every 30 minutes')
         self.config = {
             'storage_path': '/data',
             'limit': 10
@@ -32,4 +33,8 @@ class FileCheckHandler(BaseHandler):
             return {
                 'status': 'error',
                 'error': str(e)
-            } 
+            }
+            
+    def get_schedule_time(self):
+        """Получить время запуска по расписанию"""
+        return self.schedule_time 

@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 from typing import Dict, List, Callable
 import schedule
+from croniter import croniter
 
 logger = logging.getLogger(__name__)
 
@@ -17,13 +18,15 @@ class Scheduler:
         Args:
             job_id (str): Unique identifier for the job
             handler (Callable): Function to execute
-            schedule_time (str): Schedule time in format 'every X minutes/hours/days'
+            schedule_time (str): Schedule time in cron format or 'HH:MM'
             run_now (bool): Whether to run the job immediately
         """
-        if schedule_time.startswith('every'):
+        if ':' in schedule_time:  # Формат времени HH:MM
+            schedule.every().day.at(schedule_time).do(handler).tag(job_id)
+        elif schedule_time.startswith('every'):
             time_parts = schedule_time.split()
             if len(time_parts) != 3:
-                raise ValueError("Invalid schedule time format. Use 'every X minutes/hours/days'")
+                raise ValueError("Invalid schedule time format. Use 'every X minutes/hours/days' or 'HH:MM'")
                 
             interval = int(time_parts[1])
             unit = time_parts[2]
@@ -36,8 +39,21 @@ class Scheduler:
                 schedule.every(interval).days.do(handler).tag(job_id)
             else:
                 raise ValueError("Invalid time unit. Use minutes, hours, or days")
-        else:
-            raise ValueError("Schedule time must start with 'every'")
+        else:  # Cron format
+            try:
+                # Проверяем валидность cron выражения
+                croniter(schedule_time, datetime.now())
+                # Преобразуем cron в формат schedule
+                minute, hour, day, month, weekday = schedule_time.split()
+                if minute != '*':
+                    # Форматируем время в формат HH:MM
+                    time_str = f"{int(hour):02d}:{int(minute):02d}"
+                    schedule.every().day.at(time_str).do(handler).tag(job_id)
+                else:
+                    time_str = f"{int(hour):02d}:00"
+                    schedule.every().day.at(time_str).do(handler).tag(job_id)
+            except Exception as e:
+                raise ValueError(f"Invalid cron format: {str(e)}")
             
         self.handlers[job_id] = handler
         self.jobs[job_id] = {
@@ -94,7 +110,7 @@ class Scheduler:
         logger.info("Запуск шедулера...")
         while True:
             try:
-                self.run_pending()
+                schedule.run_pending()
                 time.sleep(interval)
             except Exception as e:
                 logger.error(f"Ошибка в шедулере: {e}")
