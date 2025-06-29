@@ -22,12 +22,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Копирование исходного кода
 COPY app /app/app
 COPY setup.py /app/
-COPY telegram-post /app/telegram-post
 
 # Установка пакета в режиме разработки
 WORKDIR /app
 RUN pip install -e .
-RUN pip install -e ./telegram-post
 
 # Этап финального образа
 FROM python:3.9-slim

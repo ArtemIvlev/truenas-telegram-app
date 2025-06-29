@@ -12,10 +12,8 @@ REPOSITORY_NAME=$2
 USE_CACHE=${3:-true}
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
-# Обновляем подмодуль
-echo "Обновление подмодуля..."
-git submodule update --init --recursive
-git submodule update --remote
+# Проверка готовности к сборке
+echo "Подготовка к сборке..."
 
 # Отключаем BuildKit
 export DOCKER_BUILDKIT=0

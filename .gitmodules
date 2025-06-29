@@ -1,3 +1,1 @@
-[submodule "telegram-post"]
-	path = telegram-post
-	url = https://github.com/ArtemIvlev/telegram-post.git
+# Submodules removed - all functionality integrated directly

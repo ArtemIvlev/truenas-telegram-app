@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from app.handlers.base_handler import BaseHandler
 from app.config.settings import settings
 from app.scheduler.scheduler import logger
-# from telegram_post.post import post_random_photo  # Временно закомментировано
+from app.telegram.post import post_random_photo
 
 class RandomTimeHandler(BaseHandler):
     def __init__(self):
@@ -20,8 +20,7 @@ class RandomTimeHandler(BaseHandler):
             logger.info("Начало публикации фото в Telegram в случайное время")
             
             # Публикуем случайное фото
-            # TODO: Реализовать post_random_photo функцию
-            result = await self._post_random_photo_stub()
+            result = await post_random_photo()
             
             if result:
                 logger.info(f"Фото успешно опубликовано: {result}")
@@ -31,11 +30,6 @@ class RandomTimeHandler(BaseHandler):
         except Exception as e:
             logger.error(f"Ошибка при публикации фото: {str(e)}")
     
-    async def _post_random_photo_stub(self):
-        """Временная заглушка для функции публикации фото"""
-        logger.info("Заглушка: публикация случайного фото")
-        # TODO: Реализовать интеграцию с telegram-post модулем
-        return {'status': 'success', 'message': 'Photo posted (stub)'}
         
     def handle(self):
         try:

@@ -23,6 +23,8 @@ class Settings:
     # Telegram
     TELEGRAM_BOT_TOKEN: Optional[str] = os.getenv('TELEGRAM_BOT_TOKEN')
     TELEGRAM_CHAT_ID: Optional[str] = os.getenv('TELEGRAM_CHAT_ID')
+    TELEGRAM_API_ID: Optional[str] = os.getenv('TELEGRAM_API_ID')
+    TELEGRAM_API_HASH: Optional[str] = os.getenv('TELEGRAM_API_HASH')
     
     # File paths
     PHOTO_DIR: str = os.getenv('PHOTO_DIR', '/mnt/smb/OneDrive/Pictures/!Фотосессии/')
