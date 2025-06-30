@@ -20,9 +20,16 @@ logger = logging.getLogger(__name__)
 class TelegramPoster:
     """Класс для публикации фотографий в Telegram"""
     
-    def __init__(self):
+    def __init__(self, bot_token: Optional[str] = None, chat_id: Optional[str] = None, 
+                 api_id: Optional[str] = None, api_hash: Optional[str] = None):
         self.client = None
         self.session_file = 'telegram_session'
+        
+        # Токены можно передать при инициализации (приоритет) или использовать из settings
+        self.bot_token = bot_token or settings.TELEGRAM_BOT_TOKEN
+        self.chat_id = chat_id or settings.TELEGRAM_CHAT_ID
+        self.api_id = api_id or settings.TELEGRAM_API_ID
+        self.api_hash = api_hash or settings.TELEGRAM_API_HASH
         
     async def init_client(self):
         """Инициализация Telegram клиента"""
@@ -30,18 +37,19 @@ class TelegramPoster:
             logger.error("telethon не установлен. Установите: pip install telethon")
             return False
             
-        if not settings.TELEGRAM_BOT_TOKEN:
-            logger.error("TELEGRAM_BOT_TOKEN не настроен")
+        if not self.bot_token:
+            logger.error("TELEGRAM_BOT_TOKEN не настроен (ни через параметры, ни через env)")
             return False
             
         try:
             # Для бота используем bot token
-            api_id = int(settings.TELEGRAM_API_ID) if settings.TELEGRAM_API_ID else 0
-            api_hash = settings.TELEGRAM_API_HASH or ''
+            api_id = int(self.api_id) if self.api_id else 0
+            api_hash = self.api_hash or ''
             
             if api_id and api_hash:
                 self.client = TelegramClient(self.session_file, api_id, api_hash)
-                await self.client.start(bot_token=settings.TELEGRAM_BOT_TOKEN)
+                await self.client.start(bot_token=self.bot_token)
+                logger.info("Telegram клиент инициализирован с переданными токенами")
             else:
                 logger.warning("API_ID и API_HASH не настроены, используется заглушка")
                 return False
@@ -87,9 +95,8 @@ class TelegramPoster:
             return {'status': 'error', 'error': 'client_not_initialized'}
         
         try:
-            chat_id = settings.TELEGRAM_CHAT_ID
-            if not chat_id:
-                logger.error("TELEGRAM_CHAT_ID не настроен")
+            if not self.chat_id:
+                logger.error("TELEGRAM_CHAT_ID не настроен (ни через параметры, ни через env)")
                 return {'status': 'error', 'error': 'chat_id_not_configured'}
             
             # Проверяем размер файла
@@ -102,7 +109,7 @@ class TelegramPoster:
             
             # Отправляем фото
             message = await self.client.send_file(
-                entity=chat_id,
+                entity=self.chat_id,
                 file=str(photo_path),
                 caption=caption or f"📸 {photo_path.name}",
             )
@@ -140,20 +147,39 @@ class TelegramPoster:
 # Глобальный экземпляр
 _telegram_poster = None
 
-async def get_telegram_poster() -> TelegramPoster:
-    """Получить глобальный экземпляр TelegramPoster"""
+async def get_telegram_poster(bot_token: Optional[str] = None, chat_id: Optional[str] = None, 
+                             api_id: Optional[str] = None, api_hash: Optional[str] = None) -> TelegramPoster:
+    """Получить глобальный экземпляр TelegramPoster
+    
+    Args:
+        bot_token: Токен бота (если не указан, берется из env)
+        chat_id: ID чата (если не указан, берется из env) 
+        api_id: API ID (если не указан, берется из env)
+        api_hash: API Hash (если не указан, берется из env)
+    """
     global _telegram_poster
     
-    if _telegram_poster is None:
+    # Если передаются новые токены, создаем новый экземпляр
+    if any([bot_token, chat_id, api_id, api_hash]):
+        _telegram_poster = TelegramPoster(bot_token, chat_id, api_id, api_hash)
+        await _telegram_poster.init_client()
+    elif _telegram_poster is None:
         _telegram_poster = TelegramPoster()
         await _telegram_poster.init_client()
     
     return _telegram_poster
 
-async def post_random_photo(caption: Optional[str] = None) -> Dict:
-    """Функция для публикации случайной фотографии (совместимость с предыдущим кодом)"""
+async def post_random_photo(caption: Optional[str] = None, bot_token: Optional[str] = None, 
+                           chat_id: Optional[str] = None) -> Dict:
+    """Функция для публикации случайной фотографии (совместимость с предыдущим кодом)
+    
+    Args:
+        caption: Подпись к фото
+        bot_token: Токен бота (опционально)
+        chat_id: ID чата (опционально)
+    """
     try:
-        poster = await get_telegram_poster()
+        poster = await get_telegram_poster(bot_token=bot_token, chat_id=chat_id)
         return await poster.post_random_photo(caption)
     except Exception as e:
         logger.error(f"Ошибка в post_random_photo: {e}")
