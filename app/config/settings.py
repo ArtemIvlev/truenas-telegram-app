@@ -11,10 +11,13 @@ class Settings:
     # API URLs
     DETECT_NUDE_API_URL: str = os.getenv('DETECT_NUDE_API_URL', 'http://localhost:8888/run')
     TELEGRAM_API_URL: str = os.getenv('TELEGRAM_API_URL', 'https://api.telegram.org')
+    TRUENAS_API_URL: Optional[str] = os.getenv('TRUENAS_API_URL')
+    TRUENAS_API_KEY: Optional[str] = os.getenv('TRUENAS_API_KEY')
     
     # Schedules
     DETECT_NUDE_SCHEDULE: str = os.getenv('DETECT_NUDE_SCHEDULE', '0 3 * * *')
     RANDOM_TIME_SCHEDULE: str = os.getenv('RANDOM_TIME_SCHEDULE', '0 8 * * *')
+    FILE_CHECK_SCHEDULE: str = os.getenv('FILE_CHECK_SCHEDULE', 'every 30 minutes')
     
     # Random time settings
     RANDOM_TIME_BASE: str = os.getenv('RANDOM_TIME_BASE', '08:00')

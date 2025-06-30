@@ -11,6 +11,7 @@ from app.config.settings import settings
 from app.scheduler.scheduler import Scheduler
 from app.handlers.detect_nude_handler import DetectNudeHandler
 from app.handlers.random_time_handler import RandomTimeHandler
+from app.handlers.file_check_handler import FileCheckHandler
 from app.telegram.post import get_telegram_poster, post_random_photo
 
 # Настройка логирования
@@ -43,11 +44,12 @@ app.add_middleware(
 # Глобальные переменные для обработчиков
 random_time_handler = None
 detect_nude_handler = None
+file_check_handler = None
 
 @app.on_event("startup")
 async def startup_event():
     """Инициализация приложения при запуске"""
-    global random_time_handler, detect_nude_handler
+    global random_time_handler, detect_nude_handler, file_check_handler
     
     logger.info(f"Starting TrueNAS Telegram Scheduler API version: {settings.APP_VERSION}")
     
@@ -61,6 +63,7 @@ async def startup_event():
     # Инициализируем обработчики
     random_time_handler = RandomTimeHandler()
     detect_nude_handler = DetectNudeHandler()
+    file_check_handler = FileCheckHandler()
     
     # Добавляем задачи в шедулер
     scheduler.add_job(
@@ -74,6 +77,13 @@ async def startup_event():
         "detect_nude",
         detect_nude_handler.handle,
         settings.DETECT_NUDE_SCHEDULE,
+        run_now=False
+    )
+
+    scheduler.add_job(
+        "file_check",
+        file_check_handler.handle,
+        settings.FILE_CHECK_SCHEDULE,
         run_now=False
     )
 
@@ -311,6 +321,7 @@ async def get_config():
         "schedules": {
             "detect_nude": settings.DETECT_NUDE_SCHEDULE,
             "random_time": settings.RANDOM_TIME_SCHEDULE,
+            "file_check": settings.FILE_CHECK_SCHEDULE,
         },
         "thresholds": {
             "nsfw": settings.NSFW_THRESHOLD,

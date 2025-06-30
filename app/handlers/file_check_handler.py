@@ -1,12 +1,14 @@
 import os
 from app.handlers.base_handler import BaseHandler
+from app.config.settings import settings
 from app.scheduler.scheduler import logger
 
 class FileCheckHandler(BaseHandler):
     def __init__(self):
-        self.api_url = os.getenv('TRUENAS_API_URL')
-        self.api_key = os.getenv('TRUENAS_API_KEY')
-        self.schedule_time = os.getenv('FILE_CHECK_SCHEDULE', 'every 30 minutes')
+        super().__init__()
+        self.api_url = settings.TRUENAS_API_URL
+        self.api_key = settings.TRUENAS_API_KEY
+        self.schedule_time = settings.FILE_CHECK_SCHEDULE
         self.config = {
             'storage_path': '/data',
             'limit': 10

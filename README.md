@@ -93,6 +93,8 @@ curl -X POST "http://localhost:8000/scheduler/jobs/detect_nude/run"
 ### Опциональные переменные:
 - `SESSION_PATH` - путь к готовому файлу сессии (автоматически копируется при запуске)
 - `DETECT_NUDE_API_URL` - URL внешнего API для обработки (если есть)
+- `TRUENAS_API_URL` - URL TrueNAS API для проверки файлов
+- `TRUENAS_API_KEY` - API ключ для TrueNAS
 
 ## Развертывание
 

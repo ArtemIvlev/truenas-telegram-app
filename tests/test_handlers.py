@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 import requests
 from app.handlers.detect_nude_handler import DetectNudeHandler
 from app.handlers.random_time_handler import RandomTimeHandler
+from app.handlers.file_check_handler import FileCheckHandler
 from app.config.settings import settings
 
 
@@ -91,6 +92,51 @@ class TestRandomTimeHandler:
         assert result['status'] == 'success'
         assert 'scheduled_time' in result
         assert 'delay_seconds' in result
+
+
+class TestFileCheckHandler:
+    """Тесты для FileCheckHandler"""
+    
+    def test_init(self):
+        """Тест инициализации обработчика"""
+        handler = FileCheckHandler()
+        assert handler.api_url == settings.TRUENAS_API_URL
+        assert handler.api_key == settings.TRUENAS_API_KEY
+        assert handler.schedule_time == settings.FILE_CHECK_SCHEDULE
+    
+    @patch('os.listdir')
+    @patch('os.path.exists')
+    @patch('os.path.isfile')
+    def test_handle_success(self, mock_isfile, mock_exists, mock_listdir):
+        """Тест успешного выполнения проверки файлов"""
+        # Настройка mock
+        mock_exists.return_value = True
+        mock_listdir.return_value = ['file1.txt', 'file2.txt', 'subdir']
+        mock_isfile.side_effect = lambda x: x.endswith('.txt')
+        
+        # Выполнение
+        handler = FileCheckHandler()
+        result = handler.handle()
+        
+        # Проверки
+        assert result['status'] == 'success'
+        assert len(result['files']) == 2
+        assert 'file1.txt' in result['files']
+        assert 'file2.txt' in result['files']
+    
+    @patch('os.listdir')
+    def test_handle_error(self, mock_listdir):
+        """Тест обработки ошибки при чтении директории"""
+        # Настройка mock для генерации ошибки
+        mock_listdir.side_effect = OSError("Permission denied")
+        
+        # Выполнение
+        handler = FileCheckHandler()
+        result = handler.handle()
+        
+        # Проверки
+        assert result['status'] == 'error'
+        assert 'Permission denied' in result['error']
 
 
 @pytest.fixture
