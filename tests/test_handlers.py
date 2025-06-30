@@ -80,14 +80,7 @@ class TestRandomTimeHandler:
         assert handler.base_time == settings.RANDOM_TIME_BASE
         assert handler.duration_minutes == settings.RANDOM_TIME_DURATION
     
-    @pytest.mark.asyncio
-    async def test_post_random_photo_stub(self):
-        """Тест заглушки для публикации фото"""
-        handler = RandomTimeHandler()
-        result = await handler._post_random_photo_stub()
-        
-        assert result['status'] == 'success'
-        assert 'Photo posted (stub)' in result['message']
+
     
     def test_handle_scheduling(self):
         """Тест планирования задачи"""

@@ -27,8 +27,8 @@ TELEGRAM_API_HASH=your_api_hash_here
 # Путь к фотографиям (ОБЯЗАТЕЛЬНО)
 PHOTO_DIR=/path/to/your/photos
 
-# API для детекции NSFW (опционально)
-DETECT_NUDE_API_URL=http://your-nsfw-api.com/detect
+# Внешний API для обработки (опционально)
+DETECT_NUDE_API_URL=http://your-external-api.com/process
 ```
 
 ## 3. Запуск

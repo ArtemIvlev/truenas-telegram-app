@@ -12,7 +12,6 @@ from app.scheduler.scheduler import Scheduler
 from app.handlers.detect_nude_handler import DetectNudeHandler
 from app.handlers.random_time_handler import RandomTimeHandler
 from app.telegram.post import get_telegram_poster, post_random_photo
-from app.nsfw.detector import get_nsfw_detector
 
 # Настройка логирования
 logging.basicConfig(
@@ -63,18 +62,7 @@ async def startup_event():
     random_time_handler = RandomTimeHandler()
     detect_nude_handler = DetectNudeHandler()
     
-    # Добавляем задачи в шедулер  
-    def async_wrapper(async_func):
-        """Обертка для выполнения асинхронных функций в синхронном планировщике"""
-        import asyncio
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-        
-        return loop.run_until_complete(async_func())
-    
+    # Добавляем задачи в шедулер
     scheduler.add_job(
         "random_time_post",
         random_time_handler.handle,
@@ -82,16 +70,9 @@ async def startup_event():
         run_now=False
     )
 
-    def run_detect_nude():
-        if detect_nude_handler:
-            return async_wrapper(detect_nude_handler.handle)
-        else:
-            logger.error("detect_nude_handler не инициализирован")
-            return {'status': 'error', 'error': 'handler_not_initialized'}
-    
     scheduler.add_job(
         "detect_nude",
-        run_detect_nude,
+        detect_nude_handler.handle,
         settings.DETECT_NUDE_SCHEDULE,
         run_now=False
     )
@@ -116,7 +97,6 @@ async def root():
             "scheduler": "/scheduler/*",
             "telegram": "/telegram/*",
             "photos": "/photos/*",
-            "nsfw": "/nsfw/*",
             "config": "/config"
         }
     }
@@ -336,89 +316,4 @@ async def get_config():
         "telegram_configured": bool(settings.TELEGRAM_BOT_TOKEN and settings.TELEGRAM_CHAT_ID)
     }
 
-# === NSFW ДЕТЕКЦИЯ ===
-
-@app.post("/nsfw/scan-all", tags=["NSFW"])
-async def scan_all_photos():
-    """Запустить полное сканирование всех фотографий на NSFW контент"""
-    try:
-        detector = get_nsfw_detector()
-        result = await detector.process_all_images()
-        
-        return {
-            "success": True,
-            "message": "Сканирование завершено",
-            "details": result
-        }
-        
-    except Exception as e:
-        logger.error(f"Ошибка в /nsfw/scan-all: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/nsfw/scan-single", tags=["NSFW"])
-async def scan_single_photo(
-    file: UploadFile = File(..., description="Изображение для проверки на NSFW")
-):
-    """Проверить одно изображение на NSFW контент"""
-    try:
-        # Проверяем тип файла
-        if not file.content_type.startswith('image/'):
-            raise HTTPException(status_code=400, detail="Файл должен быть изображением")
-        
-        # Сохраняем временно файл
-        temp_dir = Path("temp")
-        temp_dir.mkdir(exist_ok=True)
-        
-        temp_file_path = temp_dir / file.filename
-        
-        with open(temp_file_path, "wb") as temp_file:
-            content = await file.read()
-            temp_file.write(content)
-        
-        # Проверяем через детектор
-        detector = get_nsfw_detector()
-        result = await detector.detect_single_image(temp_file_path)
-        
-        # Удаляем временный файл
-        temp_file_path.unlink(missing_ok=True)
-        
-        return {
-            "success": True,
-            "message": "Анализ завершен",
-            "details": result
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Ошибка в /nsfw/scan-single: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/nsfw/review-stats", tags=["NSFW"])
-async def get_review_stats():
-    """Получить статистику папки review (подозрительные изображения)"""
-    try:
-        detector = get_nsfw_detector()
-        stats = detector.get_review_stats()
-        
-        return {
-            "success": True,
-            "message": "Статистика получена",
-            "details": stats
-        }
-        
-    except Exception as e:
-        logger.error(f"Ошибка в /nsfw/review-stats: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/nsfw/settings", tags=["NSFW"])
-async def get_nsfw_settings():
-    """Получить настройки NSFW детектора"""
-    return {
-        "api_url": settings.DETECT_NUDE_API_URL,
-        "threshold": settings.NSFW_THRESHOLD,
-        "min_image_size": settings.MIN_IMAGE_SIZE,
-        "max_image_size": settings.MAX_IMAGE_SIZE,
-        "photo_dir": settings.PHOTO_DIR,
-        "review_dir": settings.REVIEW_DIR
-    } 
+ 
