@@ -1,4 +1,4 @@
-THIS SHOULD BE A LINTER ERRORfrom fastapi import FastAPI, HTTPException, BackgroundTasks, File, UploadFile, Form
+from fastapi import FastAPI, HTTPException, BackgroundTasks, File, UploadFile, Form
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import logging
@@ -158,11 +158,16 @@ async def run_job_manually(job_id: str, background_tasks: BackgroundTasks):
 
 @app.post("/telegram/post-random", tags=["Telegram"])
 async def post_random_photo_endpoint(
-    caption: Optional[str] = Form(None, description="Подпись к фотографии")
+    caption: Optional[str] = Form(None, description="Подпись к фотографии"),
+    bot_token: Optional[str] = Form(None, description="Токен бота (если не указан, берется из env)"),
+    chat_id: Optional[str] = Form(None, description="ID чата (если не указан, берется из env)")
 ):
-    """Опубликовать случайную фотографию в Telegram"""
+    """Опубликовать случайную фотографию в Telegram
+    
+    Токены можно передать в запросе или использовать настроенные в переменных окружения
+    """
     try:
-        result = await post_random_photo(caption)
+        result = await post_random_photo(caption, bot_token, chat_id)
         
         if result.get('status') == 'success':
             return {

@@ -86,9 +86,12 @@ curl -X POST "http://localhost:8000/scheduler/jobs/detect_nude/run"
 ### Критически важные переменные:
 - `TELEGRAM_BOT_TOKEN` - токен Telegram бота
 - `TELEGRAM_CHAT_ID` - ID чата для публикации
+- `TELEGRAM_API_ID` - API ID (получить на my.telegram.org)
+- `TELEGRAM_API_HASH` - API Hash (получить на my.telegram.org)
 - `PHOTO_DIR` - путь к директории с фотографиями
 
 ### Опциональные переменные:
+- `SESSION_PATH` - путь к готовому файлу сессии (автоматически копируется при запуске)
 - `DETECT_NUDE_API_URL` - URL внешнего API для обработки (если есть)
 
 ## Развертывание

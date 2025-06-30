@@ -25,6 +25,7 @@ class Settings:
     TELEGRAM_CHAT_ID: Optional[str] = os.getenv('TELEGRAM_CHAT_ID')
     TELEGRAM_API_ID: Optional[str] = os.getenv('TELEGRAM_API_ID')
     TELEGRAM_API_HASH: Optional[str] = os.getenv('TELEGRAM_API_HASH')
+    SESSION_PATH: Optional[str] = os.getenv('SESSION_PATH')
     
     # File paths
     PHOTO_DIR: str = os.getenv('PHOTO_DIR', '/mnt/smb/OneDrive/Pictures/!Фотосессии/')

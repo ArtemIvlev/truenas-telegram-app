@@ -1,6 +1,7 @@
 import os
 import asyncio
 import logging
+import shutil
 from pathlib import Path
 from typing import Optional, Dict, List
 import random
@@ -17,13 +18,44 @@ from app.config.settings import settings
 
 logger = logging.getLogger(__name__)
 
+def get_session_file():
+    """
+    Проверяет наличие локального файла сессии и при необходимости копирует его из SESSION_PATH
+    
+    Returns:
+        str: Путь к файлу сессии для использования
+    """
+    local_session = 'tg-post.session'
+    
+    # Проверяем наличие локального файла сессии
+    if os.path.exists(local_session):
+        logger.info(f"Найден локальный файл сессии: {local_session}")
+        return local_session
+    
+    # Если локального файла нет, проверяем SESSION_PATH
+    session_path = settings.SESSION_PATH
+    if session_path and os.path.exists(session_path):
+        logger.info(f"Копируем файл сессии из {session_path} в {local_session}")
+        try:
+            shutil.copy2(session_path, local_session)
+            logger.info("Файл сессии успешно скопирован")
+            return local_session
+        except Exception as e:
+            logger.error(f"Ошибка при копировании файла сессии: {str(e)}")
+            return session_path
+    
+    logger.info(f"Файл сессии не найден, будет создан новый: {local_session}")
+    return local_session
+
 class TelegramPoster:
     """Класс для публикации фотографий в Telegram"""
     
     def __init__(self, bot_token: Optional[str] = None, chat_id: Optional[str] = None, 
                  api_id: Optional[str] = None, api_hash: Optional[str] = None):
         self.client = None
-        self.session_file = 'telegram_session'
+        
+        # Используем функцию для получения правильного файла сессии (с копированием извне при необходимости)
+        self.session_file = get_session_file()
         
         # Токены можно передать при инициализации (приоритет) или использовать из settings
         self.bot_token = bot_token or settings.TELEGRAM_BOT_TOKEN
